@@ -100,6 +100,8 @@ def getWhenIsPersonTeaching(name,database):
                     doneTeaching = False
                     courses.append("{} at {}:{}".format(c['course'],
                         c['from']//100, c['from']%100))
+        # sort the array by time
+        sorted(courses, key = lambda course: course['to'])
         if not classToday:
             statuses.append("{} {} does not have class today.".format(
                 u['firstname'], u['lastname']))

@@ -9,8 +9,18 @@ from slackclient import SlackClient
 isPersonTeaching = "is\s+(?P<name>.+)\s+teaching"
 compiledIPT = re.compile(isPersonTeaching)
 
+doesPersonTeachToday = "does\s+(?P<name>.+)\s+teach today"
+compiledDPTT = re.compile(doesPersonTeachToday)
+
 whenIsPersonTeaching = "when\s+is\s+(?P<name>.+)\s+teaching"
 compiledWIPT = re.compile(whenIsPersonTeaching)
+datemap = [
+           'M',
+           'T',
+           'W',
+           'R',
+           'F']
+
 
 
 def nameMatch(name, database):
@@ -82,13 +92,6 @@ def getWhenIsPersonTeaching(name,database):
     milTime = currtime.hour * 100 + currtime.minute
 
     weekday = currtime.weekday()  # 0-6...
-    datemap = [
-               'M',
-               'T',
-               'W',
-               'R',
-               'F']
-
     for u in users:
         doneTeaching = True
         classToday = False
@@ -98,10 +101,12 @@ def getWhenIsPersonTeaching(name,database):
                 classToday = True
                 if milTime <= c['to'] :
                     doneTeaching = False
-                    courses.append("{} at {}:{}".format(c['course'],
-                        c['from']//100, c['from']%100))
+                    courses.append({'key':c['to'],
+                        'text': "{} at {}:{:02d}".format(c['course'],
+                                c['from']//100, c['from']%100)})
         # sort the array by time
-        sorted(courses, key = lambda course: course['to'])
+        courses = sorted(courses, key = lambda course: course['key'])
+        coursesStr = [c['text'] for c in courses]
         if not classToday:
             statuses.append("{} {} does not have class today.".format(
                 u['firstname'], u['lastname']))
@@ -110,7 +115,7 @@ def getWhenIsPersonTeaching(name,database):
                 u['firstname'], u['lastname']))
         else:
             statuses.append("{} {} is teaching {}.".format(
-                u['firstname'], u['lastname'], ' and '.join(courses)))
+                u['firstname'], u['lastname'], ' and '.join(coursesStr)))
 
     return statuses
 
@@ -142,6 +147,47 @@ def getIsPersonTeaching(name, database):
 
     return statuses
 
+def checkDoesPersonTeachToday(msg):
+    matches = compiledDPTT.search(msg)
+    if matches:
+        name = matches.group("name")
+        return name
+
+def getDoesPersonTeachToday(name, database):
+    users = findUsers(name,database)
+    if users is None:
+        return []
+
+    currtime = datetime.now()
+    milTime = currtime.hour * 100 + currtime.minute
+
+    weekday = currtime.weekday()  # 0-6...
+
+    statuses = []
+    for u in users:
+        classToday = False
+        courses = []
+        for c in u['courses']:
+            if datemap[weekday] in c['days']:
+                classToday = True
+                doneTeaching = False
+                courses.append({'key': c['to'],
+                    'text': "{} from {}:{:02d} to {}:{:02d}".format(c['course'],
+                        c['from']//100, c['from']%100,
+                        c['to']//100, c['to']%100) })
+        # sort the array by time
+        courses = sorted(courses, key = lambda c: c['key'])
+        coursesStr = [c['text'] for c in courses]
+        if not classToday:
+            statuses.append("{} {} does not have class today.".format(
+                u['firstname'], u['lastname']))
+        else:
+            statuses.append("{} {} teaches {} today.".format(
+                u['firstname'], u['lastname'], ', and '.join(coursesStr)))
+
+    return statuses
+
+
 def reply(slack_client, channel, message):
     slack_client.api_call(
         "chat.postMessage",
@@ -155,7 +201,8 @@ def parse_bot_commands(slack_client, slack_events, config, database):
         if event["type"] == "message" and not "subtype" in event:
             message = event["text"]
 
-            # note: order here is important
+            # note: order here is important, 
+            # is person teaching must run before when is person teaching
             name = checkWhenIsPersonTeaching(message)
             statuses = None
             if name is not None:
@@ -164,6 +211,9 @@ def parse_bot_commands(slack_client, slack_events, config, database):
                 name = checkIsPersonTeaching(message)
                 if name is not None:
                     statuses = getIsPersonTeaching(name, database)
+            name = checkDoesPersonTeachToday(message)
+            if name is not None:
+                statuses = getDoesPersonTeachToday(name, database)
             if statuses is not None:
                 for s in statuses:
                     reply(slack_client, event['channel'], s)

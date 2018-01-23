@@ -7,6 +7,8 @@ class TestRegex(unittest.TestCase):
     def setUp(self):
         f = open("teaching_status_config.json.unittest")
         self.config = json.load(f)
+        f = open("database.json.unittest")
+        self.database = json.load(f)
 
     def test_isTeaching(self):
         name = checkIsPersonTeaching("Is Robert teaching")
@@ -34,23 +36,25 @@ class TestUserMatching(unittest.TestCase):
     def setUp(self):
         f = open("teaching_status_config.json.unittest")
         self.config = json.load(f)
+        f = open("database.json.unittest")
+        self.database = json.load(f)
 
     def test_name_matching(self):
         # 2 roberts in test file
-        names = nameMatchCount("robert", self.config)
+        names = nameMatch("robert", self.database)
         self.assertEquals( len(names), 2)
-        names = nameMatchCount("robert guderian", self.config)
+        names = nameMatch("robert guderian", self.database)
         self.assertEquals( len(names), 1)
 
         # 1 franklin, check values
-        names = nameMatchCount("franklin", self.config)
+        names = nameMatch("franklin", self.database)
         self.assertEquals( len(names), 1)
         self.assertEquals(names[0]['firstname'], "Franklin")
         self.assertEquals(names[0]['lastname'], "Bristow")
 
 
     def test_no_match(self):
-        names = nameMatchCount("robertdddddd", self.config)
+        names = nameMatch("robertdddddd", self.database)
         self.assertIsNone(names)
 
 

@@ -13,7 +13,7 @@ whenIsPersonTeaching = "when\s+is\s+(?P<name>.+)\s+teaching"
 compiledWIPT = re.compile(whenIsPersonTeaching)
 
 
-def nameMatch(name, config):
+def nameMatch(name, database):
     """
     Passes back a list of matched users
     none if no matches
@@ -21,7 +21,7 @@ def nameMatch(name, config):
     firstNameMatches = []
     lastNameMatches = []
     fullNameMatches = []
-    for u in config['data']:
+    for u in database:
         # using in, so things like tremblay will match
         # tremblay-savard
         count = 0
@@ -44,7 +44,7 @@ def nameMatch(name, config):
         return firstNameMatches
     return None
 
-def findUsers(name, config):
+def findUsers(name, database):
     """
     Find a user based on a name.
     The name can be a first name, last name, both.
@@ -54,7 +54,7 @@ def findUsers(name, config):
     # check perfect firstname/lastname matches
     # check perfect lastname matches
     # check perfect firstname matches
-    matches = nameMatch(name, config)
+    matches = nameMatch(name, database)
     if matches is not None:
         return matches
     # use hamming distance to fuzzy match.
@@ -72,8 +72,8 @@ def checkWhenIsPersonTeaching(msg):
         name = matches.group('name')
         return name
 
-def getWhenIsPersonTeaching(name, config):
-    users = findUsers(name, config)
+def getWhenIsPersonTeaching(name,database):
+    users = findUsers(name, database)
     if users is None:
         return []
 
@@ -86,7 +86,7 @@ def getWhenIsPersonTeaching(name, config):
                'M',
                'T',
                'W',
-               'H',
+               'R',
                'F']
 
     for u in users:
@@ -94,13 +94,12 @@ def getWhenIsPersonTeaching(name, config):
         classToday = False
         courses = []
         for c in u['courses']:
-            import pdb; pdb.set_trace()
             if datemap[weekday] in c['days']:
                 classToday = True
                 if milTime <= c['to'] :
                     doneTeaching = False
                     courses.append("{} at {}:{}".format(c['course'],
-                        milTime//100, milTime%100))
+                        c['from']//100, c['from']%100))
         if not classToday:
             statuses.append("{} {} does not have class today.".format(
                 u['firstname'], u['lastname']))
@@ -108,19 +107,19 @@ def getWhenIsPersonTeaching(name, config):
             statuses.append("{} {} is done teaching for the day.".format(
                 u['firstname'], u['lastname']))
         else:
-            statuses.append("{} {} is teaching at {}.".format(
+            statuses.append("{} {} is teaching {}.".format(
                 u['firstname'], u['lastname'], ' and '.join(courses)))
 
     return statuses
 
-def getIsPersonTeaching(name, config):
+def getIsPersonTeaching(name, database):
     """
     Check if a user is teaching. Return strings about users that matched
     the name filter.
     returns an array of strings.
     """
     # find user in file
-    users = findUsers(name, config)
+    users = findUsers(name, database)
     if users is None:
         return []
 
@@ -149,7 +148,7 @@ def reply(slack_client, channel, message):
     )
 
 
-def parse_bot_commands(slack_client, slack_events, config):
+def parse_bot_commands(slack_client, slack_events, config, database):
     for event in slack_events:
         if event["type"] == "message" and not "subtype" in event:
             message = event["text"]
@@ -158,11 +157,11 @@ def parse_bot_commands(slack_client, slack_events, config):
             name = checkWhenIsPersonTeaching(message)
             statuses = None
             if name is not None:
-                statuses = getWhenIsPersonTeaching(name, config)
+                statuses = getWhenIsPersonTeaching(name, database)
             else:
                 name = checkIsPersonTeaching(message)
                 if name is not None:
-                    statuses = getIsPersonTeaching(name, config)
+                    statuses = getIsPersonTeaching(name, database)
             if statuses is not None:
                 for s in statuses:
                     reply(slack_client, event['channel'], s)
@@ -171,6 +170,8 @@ if __name__ == "__main__":
     # read config file
     f = open("teaching_status_config.json")
     config = json.load(f)
+    f = open("database.json")
+    database = json.load(f)
 
     # instantiate Slack client
     slack_client = SlackClient(config['SLACK_BOT_TOKEN'])
@@ -185,7 +186,8 @@ if __name__ == "__main__":
         # Read bot's user ID by calling Web API method `auth.test`
         userStatusbot_id = slack_client.api_call("auth.test")["user_id"]
         while True:
-            parse_bot_commands(slack_client, slack_client.rtm_read(), config)
+            parse_bot_commands(slack_client, slack_client.rtm_read(), config,
+                    database)
             time.sleep(RTM_READ_DELAY)
     else:
         print("Connection failed. Exception traceback printed above.")

@@ -39,6 +39,8 @@ class TestUserMatching(unittest.TestCase):
         # 2 roberts in test file
         names = nameMatchCount("robert", self.config)
         self.assertEquals( len(names), 2)
+        names = nameMatchCount("robert guderian", self.config)
+        self.assertEquals( len(names), 1)
 
         # 1 franklin, check values
         names = nameMatchCount("franklin", self.config)

@@ -34,7 +34,11 @@ class TestRegex(unittest.TestCase):
 
     def test_isPersonTeaching(self):
         name = checkDoesPersonTeachToday("does Robert teach today")
-        self.assertEquals(name, 'Robert')
+        self.assertEquals(name, 'robert')
+
+    def test_WhenDoesPersonTeach(self):
+        name = checkWhenDoesPersonTeach("when does Robert teach")
+        self.assertEquals(name, 'robert')
 
 
 class TestUserMatching(unittest.TestCase):

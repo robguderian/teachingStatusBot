@@ -6,14 +6,22 @@ from datetime import datetime
 
 from slackclient import SlackClient
 
+# is x teaching
 isPersonTeaching = "is\s+(?P<name>.+)\s+teaching"
 compiledIPT = re.compile(isPersonTeaching)
 
+#does x teach today
 doesPersonTeachToday = "does\s+(?P<name>.+)\s+teach today"
 compiledDPTT = re.compile(doesPersonTeachToday)
 
+# when is x teaching
 whenIsPersonTeaching = "when\s+is\s+(?P<name>.+)\s+teaching"
 compiledWIPT = re.compile(whenIsPersonTeaching)
+
+# when does x teach
+whenDoesPersonTeach = "when\s+does\s+(?P<name>.+)\s+teach"
+compiledWDPT = re.compile(whenDoesPersonTeach)
+
 datemap = [
            'M',
            'T',
@@ -78,6 +86,12 @@ def checkIsPersonTeaching(msg):
 
 def checkWhenIsPersonTeaching(msg):
     matches = compiledWIPT.search(msg.lower())
+    if matches:
+        name = matches.group('name')
+        return name
+
+def checkWhenDoesPersonTeach(msg):
+    matches = compiledWDPT.search(msg.lower())
     if matches:
         name = matches.group('name')
         return name
@@ -148,7 +162,7 @@ def getIsPersonTeaching(name, database):
     return statuses
 
 def checkDoesPersonTeachToday(msg):
-    matches = compiledDPTT.search(msg)
+    matches = compiledDPTT.search(msg.lower())
     if matches:
         name = matches.group("name")
         return name
@@ -187,6 +201,39 @@ def getDoesPersonTeachToday(name, database):
 
     return statuses
 
+def getWhenDoesPersonTeach(name, database):
+    """
+    Print when someone teaches
+    Bug? If the user doesn't exist, it returns nothing. So, a prof
+    that has no courses this term will not have a response.
+    We'd need to maintain a list of all profs to remedy this
+    """
+    users = findUsers(name,database)
+    if users is None:
+        return []
+
+    currtime = datetime.now()
+    milTime = currtime.hour * 100 + currtime.minute
+
+    weekday = currtime.weekday()  # 0-6...
+
+    statuses = []
+    for u in users:
+        courses = []
+        for c in u['courses']:
+            courses.append({'key': c['to'],
+                'text': "{} from {}:{:02d} to {}:{:02d} {}".format(c['course'],
+                    c['from']//100, c['from']%100,
+                    c['to']//100, c['to']%100, c['days']) })
+        # sort the array by time
+        courses = sorted(courses, key = lambda c: c['key'])
+        coursesStr = [c['text'] for c in courses]
+        statuses.append("{} {} teaches {}.".format(
+            u['firstname'], u['lastname'], ', and '.join(coursesStr)))
+
+    return statuses
+
+
 
 def reply(slack_client, channel, message):
     slack_client.api_call(
@@ -214,6 +261,9 @@ def parse_bot_commands(slack_client, slack_events, config, database):
             name = checkDoesPersonTeachToday(message)
             if name is not None:
                 statuses = getDoesPersonTeachToday(name, database)
+            name = checkWhenDoesPersonTeach(message)
+            if name is not None:
+                statuses = getWhenDoesPersonTeach(name, database)
             if statuses is not None:
                 for s in statuses:
                     reply(slack_client, event['channel'], s)

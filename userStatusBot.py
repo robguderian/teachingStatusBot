@@ -12,15 +12,51 @@ compiledIPT = re.compile(isPersonTeaching)
 whenIsPersonTeaching = "when\s+is\s+(?P<name>.+)\s+teaching"
 compiledWIPT = re.compile(whenIsPersonTeaching)
 
+
+def nameMatchCount(name, config):
+    """
+    Passes back a list of matched users
+    none if no matches
+    """
+    firstNameMatches = []
+    lastNameMatches = []
+    fullNameMatches = []
+    for u in config['data']:
+        # using in, so things like tremblay will match
+        # tremblay-savard
+        count = 0
+        for n in name.split():
+            if n.lower() in u['lastname'].lower():
+                lastNameMatches.append(u)
+                count += 1
+            if n.lower() in u['firstname'].lower():
+                firstNameMatches.append(u)
+                count += 1
+            if count >= 1:
+                # matched one, just matched another
+                # will be a bug if we start adding middle names...
+                fullNameMatches.append(u)
+    if len(fullNameMatches) > 0:
+        return fullNameMatches
+    if len(lastNameMatches) > 0:
+        return lastNameMatches
+    if len(firstNameMatches) > 0:
+        return firstNameMatches
+    return None
+
 def findUser(name, config):
     """
     Find a user based on a name.
     The name can be a first name, last name, both.
     Fuzzy match, score the names to the users. Return best matches.
+    returns a list
     """
     # check perfect firstname/lastname matches
     # check perfect lastname matches
     # check perfect firstname matches
+    matches = nameMatch(name, config)
+    if matches is not None:
+        return matches
     # use hamming distance to fuzzy match.
     pass
 

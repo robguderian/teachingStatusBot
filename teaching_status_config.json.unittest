@@ -9,9 +9,8 @@
      {"from":930, "to":1030, "days":"MWF", "course":"COMP1020other"}]
    },
    {"firstname": "Franklin", "lastname": "Bristow", "courses": [
-   {"firstname": "Franklin", "lastname": "Bristow", "courses": [
-     {"from": 1130, "to":1300, "days":"TH", "course": "COMP4350"}.
-     {"from": 1430, "to":1600, "days":"TH", "course": "COMP1012"}.
+     {"from": 1130, "to":1300, "days":"TH", "course": "COMP4350"},
+     {"from": 1430, "to":1600, "days":"TH", "course": "COMP1012"}
     ]
    }
  ]

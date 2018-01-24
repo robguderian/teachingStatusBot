@@ -151,7 +151,7 @@ def getWhenIsPersonTeaching(name,database):
                 u['firstname'], u['lastname']))
         else:
             statuses.append("{} {} is teaching {}.".format(
-                u['firstname'], u['lastname'], ' and '.join(coursesStr)))
+                u['firstname'], u['lastname'], 'and '.join(coursesStr)))
 
     return statuses
 
@@ -284,6 +284,7 @@ def parse_bot_commands(slack_client, slack_events, config, database):
 
             # note: order here is important, 
             # is person teaching must run before when is person teaching
+            # TODO - this needs to be refactored in the worst way
             name = checkWhenIsPersonTeaching(message)
             statuses = None
             if name is not None:
@@ -307,17 +308,22 @@ def parse_bot_commands(slack_client, slack_events, config, database):
             profs = []
             if courseName is not None:
                 profs = getWhoIsTeachingCourse(courseName, database)
-            if len(profs) > 0:
-                if len(profs) > 1:
-                    profs[-1] = " and {}".format(profs[-1])
-                    profList = ', '.join(profs)
-                    profStr = "{} are teaching COMP {}.".format(profList,
-                        courseName)
+                if len(profs) > 0:
+                    if len(profs) > 1:
+                        profs[-1] = " and {}".format(profs[-1])
+                        profList = ', '.join(profs)
+                        profStr = "{} are teaching COMP {}.".format(profList,
+                            courseName)
+                    else:
+                        profStr = "{} is teaching COMP {}.".format(profs[0],
+                            courseName)
+                    reply(slack_client, event['channel'], profStr)
                 else:
-                    profStr = "{} is teaching COMP {}.".format(profs[0],
-                        courseName)
+                    noProf=("There is no one teaching COMP {} " +
+                           "currently.").format(courseName)
+                    reply(slack_client, event['channel'], noProf)
 
-                reply(slack_client, event['channel'], profStr)
+
 
 
 if __name__ == "__main__":

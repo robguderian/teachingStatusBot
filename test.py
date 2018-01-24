@@ -46,10 +46,15 @@ class TestRegex(unittest.TestCase):
 
         name = checkWhoIsTeachingCourse("who is teaching 1020")
         self.assertEquals(name, "1020")
+        name = checkWhoIsTeachingCourse("who's teaching 1020")
+        self.assertEquals(name, "1020")
+        name = checkWhoIsTeachingCourse("who teaches 1020")
+        self.assertEquals(name, "1020")
 
     def test_whoIsTeachingCourseNames(self):
         names = getWhoIsTeachingCourse(1012, self.database)
         self.assertEquals(len(names), 2)
+
 
 
 class TestUserMatching(unittest.TestCase):

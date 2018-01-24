@@ -25,6 +25,10 @@ compiledWDPT = re.compile(whenDoesPersonTeach)
 # who is teaching xxxx, who is teaching comp xxxx
 whoIsTeachingCourse = "who\s+is\s+teaching\s+(?:comp)?\s*(?P<course>\d\d\d\d)"
 compiledWITC = re.compile(whoIsTeachingCourse)
+whosTeachingCourse = "who's\s+teaching\s+(?:comp)?\s*(?P<course>\d\d\d\d)"
+compiledWTC = re.compile(whosTeachingCourse)
+whoTeachesCourse = "who\s+teaches\s+(?:comp)?\s*(?P<course>\d\d\d\d)"
+compiledWTC2 = re.compile(whoTeachesCourse)
 
 datemap = [
            'M',
@@ -102,6 +106,14 @@ def checkWhenDoesPersonTeach(msg):
 
 def checkWhoIsTeachingCourse(msg):
     matches = compiledWITC.search(msg.lower())
+    if matches:
+        name = matches.group('course')
+        return name
+    matches = compiledWTC.search(msg.lower())
+    if matches:
+        name = matches.group('course')
+        return name
+    matches = compiledWTC2.search(msg.lower())
     if matches:
         name = matches.group('course')
         return name
@@ -292,8 +304,20 @@ def parse_bot_commands(slack_client, slack_events, config, database):
 
             # phase 2, who is teaching a course
             courseName = checkWhoIsTeachingCourse(message)
+            profs = []
             if courseName is not None:
                 profs = getWhoIsTeachingCourse(courseName, database)
+            if len(profs) > 0:
+                if len(profs) > 1:
+                    profs[-1] = " and {}".format(profs[-1])
+                    profList = ', '.join(profs)
+                    profStr = "{} are teaching COMP {}.".format(profList,
+                        courseName)
+                else:
+                    profStr = "{} is teaching COMP {}.".format(profs[0],
+                        courseName)
+
+                reply(slack_client, event['channel'], profStr)
 
 
 if __name__ == "__main__":

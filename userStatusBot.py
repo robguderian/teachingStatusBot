@@ -22,6 +22,10 @@ compiledWIPT = re.compile(whenIsPersonTeaching)
 whenDoesPersonTeach = "when\s+does\s+(?P<name>.+)\s+teach"
 compiledWDPT = re.compile(whenDoesPersonTeach)
 
+# who is teaching xxxx, who is teaching comp xxxx
+whoIsTeachingCourse = "who\s+is\s+teaching\s+(?:comp)?\s*(?P<course>\d\d\d\d)"
+compiledWITC = re.compile(whoIsTeachingCourse)
+
 datemap = [
            'M',
            'T',
@@ -94,6 +98,12 @@ def checkWhenDoesPersonTeach(msg):
     matches = compiledWDPT.search(msg.lower())
     if matches:
         name = matches.group('name')
+        return name
+
+def checkWhoIsTeachingCourse(msg):
+    matches = compiledWITC.search(msg.lower())
+    if matches:
+        name = matches.group('course')
         return name
 
 def getWhenIsPersonTeaching(name,database):
@@ -233,6 +243,18 @@ def getWhenDoesPersonTeach(name, database):
 
     return statuses
 
+def getWhoIsTeachingCourse(name, database):
+    """
+    Find all the people teaching a course. Return a list of names
+    """
+    profs = []
+
+    for u in database:
+        for c in u['courses']:
+            if c['course'] == "COMP {}".format(name):
+                profs.append("{} {}".format(u['firstname'], u['lastname']))
+    return profs
+
 
 
 def reply(slack_client, channel, message):
@@ -267,6 +289,12 @@ def parse_bot_commands(slack_client, slack_events, config, database):
             if statuses is not None:
                 for s in statuses:
                     reply(slack_client, event['channel'], s)
+
+            # phase 2, who is teaching a course
+            courseName = checkWhoIsTeachingCourse(message)
+            if courseName is not None:
+                profs = getWhoIsTeachingCourse(courseName, database)
+
 
 if __name__ == "__main__":
     # read config file

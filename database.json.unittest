@@ -1,15 +1,15 @@
 [
    {"firstname": "Robert", "lastname": "Guderian", "courses": [
-     {"from":1230, "to":1330, "days":"MWF", "course":"COMP1012"},
-     {"from":1430, "to":1530, "days":"MWF", "course":"COMP1020"}]
+     {"from":1230, "to":1330, "days":"MWF", "course":"COMP 1012"},
+     {"from":1430, "to":1530, "days":"MWF", "course":"COMP 1020"}]
    },
    {"firstname": "Robert", "lastname": "Other", "courses": [
-     {"from":930, "to":1030, "days":"MWF", "course":"COMP1012other"},
-     {"from":930, "to":1030, "days":"MWF", "course":"COMP1020other"}]
+     {"from":930, "to":1030, "days":"MWF", "course":"COMP 2012"},
+     {"from":930, "to":1030, "days":"MWF", "course":"COMP 2020"}]
    },
    {"firstname": "Franklin", "lastname": "Bristow", "courses": [
-     {"from": 1130, "to":1300, "days":"TR", "course": "COMP4350"},
-     {"from": 1430, "to":1600, "days":"TR", "course": "COMP1012"}
+     {"from": 1130, "to":1300, "days":"TR", "course": "COMP 4350"},
+     {"from": 1430, "to":1600, "days":"TR", "course": "COMP 1012"}
     ]
    }
  ]

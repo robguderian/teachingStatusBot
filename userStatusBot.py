@@ -22,7 +22,7 @@ compiledWIPT = re.compile(whenIsPersonTeaching)
 whenDoesPersonTeach = "when\s+does\s+(?P<name>.+)\s+teach"
 compiledWDPT = re.compile(whenDoesPersonTeach)
 whatDoesPersonTeach = "what\s+does\s+(?P<name>.+)\s+teach"
-compiledWhatDPT = re.compile(whenDoesPersonTeach)
+compiledWhatDPT = re.compile(whatDoesPersonTeach)
 
 # who is teaching xxxx, who is teaching comp xxxx
 whoIsTeachingCourse = "who\s+is\s+teaching\s+(?:comp)?\s*(?P<course>\d\d\d\d)"

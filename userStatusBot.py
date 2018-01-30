@@ -21,6 +21,8 @@ compiledWIPT = re.compile(whenIsPersonTeaching)
 # when does x teach
 whenDoesPersonTeach = "when\s+does\s+(?P<name>.+)\s+teach"
 compiledWDPT = re.compile(whenDoesPersonTeach)
+whatDoesPersonTeach = "what\s+does\s+(?P<name>.+)\s+teach"
+compiledWhatDPT = re.compile(whenDoesPersonTeach)
 
 # who is teaching xxxx, who is teaching comp xxxx
 whoIsTeachingCourse = "who\s+is\s+teaching\s+(?:comp)?\s*(?P<course>\d\d\d\d)"
@@ -103,6 +105,11 @@ def checkWhenDoesPersonTeach(msg):
     if matches:
         name = matches.group('name')
         return name
+    matches = compiledWhatDPT.search(msg.lower())
+    if matches:
+        name = matches.group('name')
+        return name
+
 
 def checkWhoIsTeachingCourse(msg):
     matches = compiledWITC.search(msg.lower())

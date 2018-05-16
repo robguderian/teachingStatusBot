@@ -48,7 +48,7 @@ def addCourse(data, email, coursename, days, fromTime, toTime):
 database = []
 
 html_doc = open('courses.html')
-soup = BeautifulSoup(html_doc, 'html.parser')
+soup = BeautifulSoup(html_doc, 'html5lib')
 
 # load up the table that has all the courses
 # find finds the first datadisplaytable
@@ -64,22 +64,25 @@ currCourse = ""
 isCourse = False
 
 # the dict to hold the prof name, and course data
-for tr in course_table.find_all('tr', recursive=False):
-    if isHeader:
-        match = courseName.search(tr.get_text())
-        if match is not None:
-            currCourse = match.group(1)
-            isCourse = match.group(2) == "A"
+for tr in soup.find_all('tr', recursive=True):
+    #import pdb; pdb.set_trace()
+    match = courseName.search(tr.get_text())
+    if match is not None:
+        print "Found course: " + tr.get_text()
+        currCourse = match.group(1)
+        isCourse = match.group(2) == "A"
 
     else:
         # only slurp in data if this is a course, not a lab
         # not all courses have a lecture slot table? Great.
-        if isCourse and tr.table is not None:
-            print currCourse
-            data = tr.table.find_all('td')
+        #import pdb; pdb.set_trace()
+        lectureslot = tr.find("table", class_="datadisplaytable",
+                recursive=True)
+        if isCourse and lectureslot is not None:
+            data = lectureslot.find_all('td')
             # Double check that this is, indeed, a lecture
-            print data[0].get_text()
             if data is not None and data[0].get_text() == "Lecture":
+                print "Adding lecture: " + data[0].get_text()
                 times = convertTimes(data[1].get_text())
                 addCourse(database,
                           data[6],
@@ -88,7 +91,6 @@ for tr in course_table.find_all('tr', recursive=False):
                           times[0],
                           times[1])
 
-    isHeader = not isHeader
 
 writeFile = open('database.json', 'w')
 j = json.dumps(database)

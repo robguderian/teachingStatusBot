@@ -332,7 +332,6 @@ def parse_bot_commands(slack_client, slack_events, config, database):
 
 
 
-
 if __name__ == "__main__":
     # read config file
     f = open("teaching_status_config.json")
@@ -353,8 +352,19 @@ if __name__ == "__main__":
         # Read bot's user ID by calling Web API method `auth.test`
         userStatusbot_id = slack_client.api_call("auth.test")["user_id"]
         while True:
-            parse_bot_commands(slack_client, slack_client.rtm_read(), config,
-                    database)
+            try:
+                message = slack_client.rtm_read()
+            except:
+                try:
+                    print "Error: lost connection, trying to re-establish"
+                    slack_client.rtm_connect(with_team_state=False)
+                    userStatusbot_id = slack_client.api_call("auth.test")["user_id"]
+                except:
+                    message = ""
+                    e = sys.exc_info()[0]
+                    print "Error: " + str(e)
+
+            parse_bot_commands(slack_client, message, config, database)
             time.sleep(RTM_READ_DELAY)
     else:
         print("Connection failed. Exception traceback printed above.")

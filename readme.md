@@ -3,6 +3,12 @@ User teaching status bot
 
 Shows if a person is currently teaching
 
+prereqs
+------
+
+- pip install beautifulsoup
+- pip install html5lib
+
 Usage
 ------
 

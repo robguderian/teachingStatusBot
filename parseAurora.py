@@ -23,26 +23,27 @@ def convertTimes(strTime):
 
 def addCourse(data, email, coursename, days, fromTime, toTime):
     # check the array for this name
-    print email.a['href']
-    matches = re.match("mailto:(\w+)\.(.+)@\w+", email.a['href'])
-    firstname = matches.group(1)
-    lastname = matches.group(2)
+    if email is not None and email.a is not None:
+        print email.a['href']
+        matches = re.match("mailto:(\w+)\.(.+)@\w+", email.a['href'])
+        firstname = matches.group(1)
+        lastname = matches.group(2)
 
-    addedToUser = False
-    newCourse =  { 'from':fromTime,
-                   'to':toTime,
-                   'days':days,
-                   'course':coursename}
-    for u in data:
-        if u['firstname'] == firstname and u['lastname'] == lastname:
-            u['courses'].append( newCourse )
-            addedToUser = True
-    if not addedToUser:
-        newuser = {'firstname': firstname,
-                   'lastname': lastname,
-                   'courses': []}
-        newuser['courses'].append(newCourse)
-        data.append(newuser)
+        addedToUser = False
+        newCourse =  { 'from':fromTime,
+                       'to':toTime,
+                       'days':days,
+                       'course':coursename}
+        for u in data:
+            if u['firstname'] == firstname and u['lastname'] == lastname:
+                u['courses'].append( newCourse )
+                addedToUser = True
+        if not addedToUser:
+            newuser = {'firstname': firstname,
+                       'lastname': lastname,
+                       'courses': []}
+            newuser['courses'].append(newCourse)
+            data.append(newuser)
 
 
 database = []

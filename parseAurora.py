@@ -26,8 +26,15 @@ def addCourse(data, email, coursename, days, fromTime, toTime):
     if email is not None and email.a is not None:
         print email.a['href']
         matches = re.match("mailto:(\w+)\.(.+)@\w+", email.a['href'])
-        firstname = matches.group(1)
-        lastname = matches.group(2)
+        if matches is not None:
+            firstname = matches.group(1)
+            lastname = matches.group(2)
+        else:
+            # otherwise, chop off the (P) from the end using slicing
+            theName = email.text.split()[:-1]
+            # reconstitule the first (and middle) names
+            firstname = " ".join(theName[:-1])
+            lastname = theName[-1]
 
         addedToUser = False
         newCourse =  { 'from':fromTime,
